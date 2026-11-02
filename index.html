@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>开票详情（线下补录） · 大黄鹅 OS 管理系统</title>
+<title>开票详情（线下补录） · 售货机内部平台</title>
 <style>
   :root{
     --primary:#2b7cff;
@@ -17,7 +17,7 @@
     --bg:#f5f6f8;
     --danger:#f53f3f;
     --success:#00b578;
-    --warn:#ff7d00;
+    --warn:#ff9a2e;
     --radius:6px;
   }
   *{margin:0;padding:0;box-sizing:border-box;}
@@ -41,59 +41,51 @@
 
   .layout{display:flex;align-items:flex-start;min-height:calc(100vh - 56px);}
   .sidebar{
-    width:170px;flex-shrink:0;background:#fff;border-right:1px solid var(--border);
-    position:sticky;top:56px;height:calc(100vh - 56px);overflow:auto;padding:8px 0;
+    width:150px;flex-shrink:0;background:#fff;border-right:1px solid var(--border);
+    position:sticky;top:56px;height:calc(100vh - 56px);overflow:auto;padding:14px 0;
   }
-  .side-item{padding:8px 12px 8px 20px;border-radius:4px;color:var(--text-3);cursor:pointer;font-size:13px;margin-bottom:1px;}
+  .side-item{padding:9px 12px 9px 20px;color:var(--text-2);cursor:pointer;font-size:13px;margin-bottom:2px;}
   .side-item:hover{background:var(--border-2);}
-  .side-item.main{
-    display:flex;align-items:center;gap:6px;color:var(--text);font-weight:600;
-    font-size:14px;padding:12px 12px 8px 16px;cursor:default;
-  }
-  .side-item.main .ic{color:var(--primary);font-style:normal;}
-  .side-item.sub{padding-left:34px;}
-  .side-item.sub.active{background:var(--primary-light);color:var(--primary);font-weight:500;}
+  .side-item.active{background:var(--primary-light);color:var(--primary);font-weight:500;}
 
   .content{flex:1;min-width:0;padding:16px 24px 24px;display:flex;flex-direction:column;}
   .breadcrumb{font-size:13px;color:var(--text-3);margin-bottom:14px;}
   .breadcrumb b{color:var(--text);font-weight:500;}
-  .breadcrumb a{color:var(--text-3);text-decoration:none;}
-  .breadcrumb a:hover{color:var(--primary);}
 
-  .card{background:#fff;border-radius:var(--radius);box-shadow:0 1px 2px rgba(0,0,0,.03);}
-  .card + .card{margin-top:16px;}
-  .card-pad{padding:20px 24px 24px;}
-  .sec-title{font-size:15px;font-weight:600;display:flex;align-items:center;gap:8px;margin-bottom:16px;}
-  .sec-title::before{content:"";width:3px;height:15px;background:var(--primary);border-radius:2px;}
-  .sec-title .extra{margin-left:auto;font-size:12px;font-weight:400;color:var(--text-3);}
-
-  /* 状态横幅 */
-  .status-bar{
-    display:flex;align-items:flex-start;gap:12px;border-radius:var(--radius);padding:14px 18px;
-    background:#e8f7ef;border:1px solid #c9efdb;
+  .panel{background:#fff;border-radius:var(--radius);box-shadow:0 1px 2px rgba(0,0,0,.03);padding:18px 24px 22px;}
+  .panel + .panel{margin-top:16px;}
+  .sec-title{
+    font-size:15px;font-weight:600;display:flex;align-items:center;gap:8px;margin-bottom:18px;
   }
-  .status-bar .dot{width:8px;height:8px;border-radius:50%;background:var(--success);margin-top:8px;flex-shrink:0;}
-  .status-bar .st-main{font-size:15px;font-weight:600;color:#00875a;display:flex;align-items:center;gap:10px;}
-  .status-bar .st-sub{font-size:12.5px;color:var(--text-2);margin-top:4px;line-height:1.7;}
-  .status-bar .st-right{margin-left:auto;text-align:right;font-size:12.5px;color:var(--text-3);white-space:nowrap;}
-  .status-bar .st-right b{display:block;font-size:13px;color:var(--text);font-weight:600;letter-spacing:.3px;}
-  .status-bar.void{background:#f4f4f5;border-color:#e3e4e8;}
-  .status-bar.void .dot{background:#a9aeb8;}
-  .status-bar.void .st-main{color:#5c6270;}
+  .sec-title::before{content:"";width:3px;height:15px;background:var(--primary);border-radius:2px;}
+
+  /* 状态横幅（对齐线上开票详情） */
+  .status-bar{
+    display:flex;align-items:flex-start;gap:10px;border-radius:var(--radius);padding:12px 16px;
+    background:#fdf6ec;border:1px solid #faecd8;margin-bottom:16px;
+  }
+  .status-bar .dot{width:7px;height:7px;border-radius:50%;background:var(--warn);margin-top:8px;flex-shrink:0;}
+  .status-bar .st-main{font-size:13.5px;color:#b0781a;font-weight:600;display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+  .status-bar .st-sub{font-size:12.5px;color:var(--text-3);margin-top:4px;line-height:1.7;}
+  .status-bar .x{margin-left:auto;color:var(--text-3);cursor:pointer;font-size:14px;padding:0 4px;}
+  .status-bar .x:hover{color:var(--text);}
+  .status-bar.void{background:#fdecec;border-color:#f7c9c9;}
+  .status-bar.void .dot{background:var(--danger);}
+  .status-bar.void .st-main{color:#c0392b;}
   .src-tag{
-    display:inline-flex;align-items:center;height:22px;padding:0 9px;border-radius:11px;
+    display:inline-flex;align-items:center;height:20px;padding:0 8px;border-radius:10px;
     font-size:12px;background:#fff3e0;color:#c46200;font-weight:500;
   }
-  .src-tag.online{background:var(--primary-light);color:var(--primary);}
 
-  /* 只读字段网格 */
-  .dgrid{display:grid;grid-template-columns:1fr 1fr;gap:2px 0;border-top:1px solid var(--border-2);}
-  .dgrid .it{display:flex;padding:11px 0;border-bottom:1px solid var(--border-2);font-size:13px;}
-  .dgrid .it.full{grid-column:1 / -1;}
-  .dgrid .dk{width:96px;flex-shrink:0;color:var(--text-3);}
-  .dgrid .dv{color:var(--text);word-break:break-all;}
-  .dgrid .dv.mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12.5px;}
-  .money{font-size:16px;font-weight:600;color:var(--danger);}
+  /* 字段网格：一行四组「标签 值」 */
+  .fgrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px 28px;}
+  .fgrid .it{min-width:0;font-size:13px;line-height:1.6;}
+  .fgrid .it .k{color:var(--text-3);margin-right:10px;white-space:nowrap;}
+  .fgrid .it .v{color:var(--text);word-break:break-all;}
+  .fgrid .it .v.link{color:var(--primary);cursor:pointer;}
+  .fgrid .it .v.muted{color:var(--text-3);}
+  .money{font-size:15px;font-weight:600;color:var(--danger);}
+  .note-link{color:var(--primary);cursor:pointer;font-size:12px;margin-left:6px;}
 
   .table-wrap{border:1px solid var(--border);border-radius:4px;overflow:hidden;}
   table.gt{width:100%;border-collapse:collapse;font-size:13px;}
@@ -104,22 +96,23 @@
   table.gt td{padding:10px 14px;border-bottom:1px solid var(--border-2);color:var(--text-2);}
   table.gt tbody tr:hover{background:#fafbfc;}
   table.gt tr:last-child td{border-bottom:none;}
-  table.gt td.num,table.gt th.num{text-align:right;width:160px;}
+  table.gt td.num,table.gt th.num{text-align:right;width:140px;}
   tr.total-row td{background:#fcfcfd;font-weight:600;color:var(--text);border-top:1px solid var(--border);}
   .mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12.5px;color:var(--text);}
   .neg{color:var(--danger);}
   .pill{display:inline-flex;align-items:center;height:22px;padding:0 9px;border-radius:11px;font-size:12px;}
   .pill.ok{background:#e8f7ef;color:var(--success);}
-  .pill.void{background:#f2f3f5;color:#5c6270;}
+  .pill.void{background:#f2f3f5;color:#8a919f;}
 
-  .imgs{display:flex;gap:12px;flex-wrap:wrap;}
+  .imgs{display:flex;gap:12px;flex-wrap:wrap;align-items:center;}
   .thumb{
     width:120px;height:88px;border:1px solid var(--border);border-radius:4px;overflow:hidden;
     background:linear-gradient(135deg,#eef3fb,#dfe8f6);display:flex;flex-direction:column;
-    align-items:center;justify-content:center;color:var(--text-3);font-size:12px;gap:4px;
+    align-items:center;justify-content:center;color:var(--text-3);font-size:12px;gap:4px;cursor:pointer;
   }
+  .thumb:hover{border-color:var(--primary);}
   .thumb .ic{font-size:20px;}
-  .imgs .hint{font-size:12px;color:var(--text-3);align-self:center;margin-left:4px;}
+  .imgs .hint{font-size:12px;color:var(--text-3);}
 
   .btn{
     height:30px;padding:0 16px;border-radius:4px;border:1px solid var(--border);
@@ -128,16 +121,14 @@
   .btn:hover{border-color:var(--primary);color:var(--primary);}
   .btn-danger{color:var(--danger);border-color:#f7c2c2;}
   .btn-danger:hover{background:#fff1f0;border-color:var(--danger);color:var(--danger);}
-  .btn-primary{background:var(--primary);border-color:var(--primary);color:#fff;}
-  .btn-primary:hover{background:var(--primary-hover);color:#fff;}
   .btn:disabled{background:#f7f8fa;color:#c9cdd4;border-color:var(--border);cursor:not-allowed;}
 
   .page-actions{display:flex;justify-content:flex-end;gap:12px;margin-top:20px;}
-  .page-actions .btn{height:34px;padding:0 26px;font-size:14px;}
+  .page-actions .btn{height:32px;padding:0 22px;}
 
   .void-note{
     display:none;align-items:center;gap:8px;margin-top:12px;padding:9px 14px;border-radius:4px;
-    background:#fdecec;border:1px solid #fbd4d4;color:#c0392b;font-size:12.5px;line-height:1.7;
+    background:#fdecec;border:1px solid #f7c9c9;color:#c0392b;font-size:12.5px;line-height:1.7;
   }
   .void-note.show{display:flex;}
 
@@ -177,35 +168,41 @@
 
 <div class="layout">
   <aside class="sidebar">
-    <div class="side-item">财务审核</div>
-    <div class="side-item">退款支付</div>
-    <div class="side-item">客服工单</div>
-    <div class="side-item">统计分析</div>
-    <div class="side-item main"><span class="ic">Ⓢ</span>结算中心</div>
-    <div class="side-item sub">账户管理</div>
-    <div class="side-item sub">充值管理</div>
-    <div class="side-item sub">退货记录</div>
-    <div class="side-item sub">收益结算</div>
-    <div class="side-item sub active">开票管理</div>
+    <div class="side-item">充值管理</div>
+    <div class="side-item">账户管理</div>
+    <div class="side-item">进件列表</div>
+    <div class="side-item">明细查询</div>
+    <div class="side-item">充值记录</div>
+    <div class="side-item">收益结算</div>
+    <div class="side-item">充值结算审核</div>
+    <div class="side-item">错单赔付</div>
+    <div class="side-item">提现审核</div>
+    <div class="side-item">费用管理</div>
+    <div class="side-item">汇总查询</div>
+    <div class="side-item">合同账单</div>
+    <div class="side-item">合同扣款审核</div>
+    <div class="side-item">财务对账</div>
+    <div class="side-item">账单下载</div>
+    <div class="side-item">认证审核</div>
+    <div class="side-item active">开票管理</div>
+    <div class="side-item">同步管理</div>
+    <div class="side-item">收款统计</div>
   </aside>
 
   <main class="content">
-    <div class="breadcrumb"><a href="javascript:toast('返回开票管理列表')">结算中心</a> / <a href="javascript:toast('返回开票管理列表')">开票管理</a> / <b>开票详情</b></div>
+    <div class="breadcrumb">当前位置：结算中心 / 开票管理 / <b>开票详情</b></div>
 
     <!-- 状态横幅 -->
     <div class="status-bar" id="statusBar">
       <span class="dot"></span>
       <div>
         <div class="st-main">
-          <span id="stText">已开票</span>
-          <span class="src-tag" id="srcTag">线下补录</span>
+          <span id="stText">已开票 · 本单由财务线下补录生成</span>
+          <span class="src-tag">线下补录</span>
         </div>
-        <div class="st-sub" id="stSub">本单由财务线下补录生成，已计入有效开票；关联订单开票状态为「已开票」，不再出现在「新增开票」可选订单中。</div>
+        <div class="st-sub" id="stSub">关联订单开票状态为「已开票」，不再出现在「新增开票」的可选订单列表中。</div>
       </div>
-      <div class="st-right">
-        <b id="noText">KP202611020001</b>
-        <span id="timeText">提交于 2026-10-28 16:20:33</span>
-      </div>
+      <span class="x" onclick="this.parentElement.style.display='none'">✕</span>
     </div>
 
     <div class="void-note" id="voidNote">
@@ -213,61 +210,68 @@
       <span>本单已作废，关联订单开票状态已回写为「已作废」，这些订单会重新出现在「新增开票」的可选订单列表中。</span>
     </div>
 
-    <!-- ① 开票信息 -->
-    <div class="card" style="margin-top:16px;">
-      <div class="card-pad">
-        <div class="sec-title">开票信息<span class="extra">线下补录单 · 仅展示补录录入的信息</span></div>
+    <!-- 申请信息 -->
+    <div class="panel">
+      <div class="sec-title">申请信息</div>
+      <div class="fgrid">
+        <div class="it"><span class="k">票据ID</span><span class="v mono">KP202611020001</span></div>
+        <div class="it"><span class="k">商户ID</span><span class="v">100001125</span></div>
+        <div class="it"><span class="k">商户名称</span><span class="v link">深圳市乐科智控科技有限公司</span></div>
+        <div class="it"><span class="k">申请类型</span><span class="v">线下补录</span></div>
+        <div class="it"><span class="k">申请人</span><span class="v">王泳瑜</span></div>
+        <div class="it"><span class="k">申请时间</span><span class="v">2026-10-28 16:20:33</span></div>
+        <div class="it"><span class="k">处理人</span><span class="v muted">--</span></div>
+        <div class="it"><span class="k">处理时间</span><span class="v muted">--</span></div>
+        <div class="it"><span class="k">导入文件名</span><span class="v">线下开票台账_20261028.xlsx</span></div>
+        <div class="it"><span class="k">所属时间</span><span class="v muted">至 ——</span></div>
+        <div class="it"><span class="k">时间类型</span><span class="v">交易</span></div>
+        <div class="it"><span class="k">备注</span><span class="v muted">-- <span class="note-link" onclick="toast('修改备注（原型不展开）')">修改</span></span></div>
+      </div>
+    </div>
 
-        <div class="dgrid">
-          <div class="it full"><div class="dk">商户</div><div class="dv">深圳市乐科智控科技有限公司</div></div>
-          <div class="it"><div class="dk">开票来源</div><div class="dv"><span class="src-tag">线下补录</span></div></div>
-          <div class="it"><div class="dk">开票类型</div><div class="dv">快销品采购</div></div>
-          <div class="it"><div class="dk">开票日期</div><div class="dv">2026-10-28</div></div>
-          <div class="it"><div class="dk">开票金额</div><div class="dv"><span class="money" id="amtText">¥748.96</span></div></div>
-          <div class="it"><div class="dk">导入文件名</div><div class="dv">线下开票台账_20261028.xlsx</div></div>
-          <div class="it"><div class="dk">导入人</div><div class="dv">王泳瑜</div></div>
-          <div class="it"><div class="dk">导入时间</div><div class="dv">2026-10-28 16:20:33</div></div>
-          <div class="it"><div class="dk">订单笔数</div><div class="dv">6 个订单（含 1 组对冲单）</div></div>
+    <!-- 发票信息 -->
+    <div class="panel">
+      <div class="sec-title">发票信息<span style="margin-left:auto;font-size:12px;font-weight:400;color:var(--text-3);">补录单仅展示补录录入项，抬头等资料以线下发票为准</span></div>
+      <div class="fgrid">
+        <div class="it"><span class="k">开票类型</span><span class="v">快销品采购</span></div>
+        <div class="it"><span class="k">开票主体</span><span class="v">深圳市乐科智控科技有限公司</span></div>
+        <div class="it"><span class="k">开票日期</span><span class="v">2026-10-28</span></div>
+        <div class="it"><span class="k">发票金额</span><span class="v"><span class="money">¥748.96</span></span></div>
+        <div class="it" style="grid-column:1 / -1;">
+          <span class="k">上传发票</span>
+          <span class="v">
+            <span class="imgs" style="display:inline-flex;margin-top:6px;">
+              <span class="thumb"><span class="ic">🧾</span><span>发票影像 1</span></span>
+              <span class="thumb"><span class="ic">🧾</span><span>发票影像 2</span></span>
+              <span class="hint">点击可查看原图（原型不展开）</span>
+            </span>
+          </span>
         </div>
       </div>
     </div>
 
-    <!-- ② 关联订单 -->
-    <div class="card">
-      <div class="card-pad">
-        <div class="sec-title">关联订单<span class="extra">开票状态随本单联动：本单有效 → 已开票；本单作废 → 已作废</span></div>
+    <!-- 订单信息 -->
+    <div class="panel" style="padding-bottom:16px;">
+      <div class="sec-title">订单信息<span style="margin-left:auto;font-size:12px;font-weight:400;color:var(--text-3);">开票状态随本单联动：本单有效 → 已开票；本单作废 → 已作废</span></div>
 
-        <div class="table-wrap">
-          <table class="gt">
-            <thead>
-              <tr>
-                <th style="width:380px;">订单流水号</th>
-                <th class="num">订单金额</th>
-                <th style="width:140px;">开票状态</th>
-                <th style="width:200px;">备注</th>
-              </tr>
-            </thead>
-            <tbody id="tbody"></tbody>
-          </table>
-        </div>
+      <div class="table-wrap">
+        <table class="gt">
+          <thead>
+            <tr>
+              <th style="width:360px;">订单号</th>
+              <th class="num">订单金额</th>
+              <th style="width:120px;">开票状态</th>
+              <th style="width:240px;">备注</th>
+            </tr>
+          </thead>
+          <tbody id="tbody"></tbody>
+        </table>
       </div>
-    </div>
 
-    <!-- ③ 开票图片 -->
-    <div class="card">
-      <div class="card-pad">
-        <div class="sec-title">开票图片<span class="extra">补录时上传，共 2 张</span></div>
-        <div class="imgs">
-          <div class="thumb"><span class="ic">🧾</span><span>发票影像 1</span></div>
-          <div class="thumb"><span class="ic">🧾</span><span>发票影像 2</span></div>
-          <span class="hint">点击可查看原图（原型不展开）</span>
-        </div>
+      <div class="page-actions" style="margin-top:18px;">
+        <button class="btn" onclick="toast('导出明细（原型不下载）')">导出明细</button>
+        <button class="btn btn-danger" id="voidBtn" onclick="openVoid()">作废</button>
       </div>
-    </div>
-
-    <div class="page-actions">
-      <button class="btn" onclick="toast('返回开票管理列表')">返回</button>
-      <button class="btn btn-danger" id="voidBtn" onclick="openVoid()">作废</button>
     </div>
   </main>
 </div>
@@ -275,7 +279,7 @@
 <!-- 作废确认 -->
 <div class="mask" id="voidMask">
   <div class="modal">
-    <h3><span class="warn-ic">!</span>作废该补录单？</h3>
+    <h3><span class="warn-ic">!</span>作废该开票单？</h3>
     <p>
       作废后本单不再计为有效开票，本单关联的 <b>6 个订单</b>开票状态将回写为「已作废」，
       并可重新在「新增开票」中被选择开票。
@@ -313,7 +317,7 @@
         '<td style="color:var(--text-3);">'+o.note+'</td>'+
       '</tr>';
     }).join('') +
-      '<tr class="total-row"><td>合计（'+ORDERS.length+' 个订单）</td>'+
+      '<tr class="total-row"><td>总计（'+ORDERS.length+' 个订单）</td>'+
       '<td class="num">'+fmt(total)+'</td><td colspan="2"></td></tr>';
   }
 
@@ -323,9 +327,10 @@
   function doVoid(){
     VOIDED = true;
     closeVoid();
-    document.getElementById('statusBar').classList.add('void');
-    document.getElementById('stText').textContent = '已作废';
-    document.getElementById('stSub').textContent = '本单已作废，不再计为有效开票；关联订单已回写为「已作废」。';
+    var bar = document.getElementById('statusBar');
+    bar.classList.add('void');
+    document.getElementById('stText').textContent = '已作废 · 本单不再计为有效开票';
+    document.getElementById('stSub').textContent = '关联订单开票状态已回写为「已作废」。';
     document.getElementById('voidNote').classList.add('show');
     var btn = document.getElementById('voidBtn');
     btn.disabled = true;
