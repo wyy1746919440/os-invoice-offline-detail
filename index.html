@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>开票详情（线下补录） · 大黄鹅 OS 管理系统</title>
+<style>
+  :root{
+    --primary:#2b7cff;
+    --primary-hover:#1f6ef2;
+    --primary-light:#eaf2ff;
+    --text:#1f2329;
+    --text-2:#4e5969;
+    --text-3:#86909c;
+    --border:#e5e6eb;
+    --border-2:#f2f3f5;
+    --bg:#f5f6f8;
+    --danger:#f53f3f;
+    --success:#00b578;
+    --warn:#ff7d00;
+    --radius:6px;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;
+    background:var(--bg);color:var(--text);font-size:14px;
+  }
+
+  .topnav{
+    height:56px;background:#fff;border-bottom:1px solid var(--border);
+    display:flex;align-items:center;padding:0 24px;position:sticky;top:0;z-index:30;
+  }
+  .logo{display:flex;align-items:center;gap:10px;font-size:20px;font-weight:700;margin-right:36px;}
+  .logo .mark{width:30px;height:30px;border-radius:50%;background:#f0b100;color:#fff;display:flex;align-items:center;justify-content:center;font-size:15px;}
+  .nav-item{padding:0 16px;line-height:56px;color:var(--text-2);cursor:pointer;font-size:14px;position:relative;white-space:nowrap;}
+  .nav-item:hover{color:var(--primary);}
+  .nav-item.active{color:var(--primary);font-weight:600;}
+  .nav-item.active::after{content:"";position:absolute;left:16px;right:16px;bottom:0;height:3px;border-radius:2px 2px 0 0;background:var(--primary);}
+  .nav-right{margin-left:auto;display:flex;align-items:center;gap:16px;color:var(--text-2);font-size:13px;white-space:nowrap;}
+  .avatar{width:28px;height:28px;border-radius:50%;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;}
+
+  .layout{display:flex;align-items:flex-start;min-height:calc(100vh - 56px);}
+  .sidebar{
+    width:170px;flex-shrink:0;background:#fff;border-right:1px solid var(--border);
+    position:sticky;top:56px;height:calc(100vh - 56px);overflow:auto;padding:8px 0;
+  }
+  .side-item{padding:8px 12px 8px 20px;border-radius:4px;color:var(--text-3);cursor:pointer;font-size:13px;margin-bottom:1px;}
+  .side-item:hover{background:var(--border-2);}
+  .side-item.main{
+    display:flex;align-items:center;gap:6px;color:var(--text);font-weight:600;
+    font-size:14px;padding:12px 12px 8px 16px;cursor:default;
+  }
+  .side-item.main .ic{color:var(--primary);font-style:normal;}
+  .side-item.sub{padding-left:34px;}
+  .side-item.sub.active{background:var(--primary-light);color:var(--primary);font-weight:500;}
+
+  .content{flex:1;min-width:0;padding:16px 24px 24px;display:flex;flex-direction:column;}
+  .breadcrumb{font-size:13px;color:var(--text-3);margin-bottom:14px;}
+  .breadcrumb b{color:var(--text);font-weight:500;}
+  .breadcrumb a{color:var(--text-3);text-decoration:none;}
+  .breadcrumb a:hover{color:var(--primary);}
+
+  .card{background:#fff;border-radius:var(--radius);box-shadow:0 1px 2px rgba(0,0,0,.03);}
+  .card + .card{margin-top:16px;}
+  .card-pad{padding:20px 24px 24px;}
+  .sec-title{font-size:15px;font-weight:600;display:flex;align-items:center;gap:8px;margin-bottom:16px;}
+  .sec-title::before{content:"";width:3px;height:15px;background:var(--primary);border-radius:2px;}
+  .sec-title .extra{margin-left:auto;font-size:12px;font-weight:400;color:var(--text-3);}
+
+  /* 状态横幅 */
+  .status-bar{
+    display:flex;align-items:flex-start;gap:12px;border-radius:var(--radius);padding:14px 18px;
+    background:#e8f7ef;border:1px solid #c9efdb;
+  }
+  .status-bar .dot{width:8px;height:8px;border-radius:50%;background:var(--success);margin-top:8px;flex-shrink:0;}
+  .status-bar .st-main{font-size:15px;font-weight:600;color:#00875a;display:flex;align-items:center;gap:10px;}
+  .status-bar .st-sub{font-size:12.5px;color:var(--text-2);margin-top:4px;line-height:1.7;}
+  .status-bar .st-right{margin-left:auto;text-align:right;font-size:12.5px;color:var(--text-3);white-space:nowrap;}
+  .status-bar .st-right b{display:block;font-size:13px;color:var(--text);font-weight:600;letter-spacing:.3px;}
+  .status-bar.void{background:#f4f4f5;border-color:#e3e4e8;}
+  .status-bar.void .dot{background:#a9aeb8;}
+  .status-bar.void .st-main{color:#5c6270;}
+  .src-tag{
+    display:inline-flex;align-items:center;height:22px;padding:0 9px;border-radius:11px;
+    font-size:12px;background:#fff3e0;color:#c46200;font-weight:500;
+  }
+  .src-tag.online{background:var(--primary-light);color:var(--primary);}
+
+  /* 只读字段网格 */
+  .dgrid{display:grid;grid-template-columns:1fr 1fr;gap:2px 0;border-top:1px solid var(--border-2);}
+  .dgrid .it{display:flex;padding:11px 0;border-bottom:1px solid var(--border-2);font-size:13px;}
+  .dgrid .it.full{grid-column:1 / -1;}
+  .dgrid .dk{width:96px;flex-shrink:0;color:var(--text-3);}
+  .dgrid .dv{color:var(--text);word-break:break-all;}
+  .dgrid .dv.mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12.5px;}
+  .money{font-size:16px;font-weight:600;color:var(--danger);}
+
+  .table-wrap{border:1px solid var(--border);border-radius:4px;overflow:hidden;}
+  table.gt{width:100%;border-collapse:collapse;font-size:13px;}
+  table.gt th{
+    background:#f7f8fa;color:var(--text-2);font-weight:500;text-align:left;
+    padding:10px 14px;border-bottom:1px solid var(--border);white-space:nowrap;
+  }
+  table.gt td{padding:10px 14px;border-bottom:1px solid var(--border-2);color:var(--text-2);}
+  table.gt tbody tr:hover{background:#fafbfc;}
+  table.gt tr:last-child td{border-bottom:none;}
+  table.gt td.num,table.gt th.num{text-align:right;width:160px;}
+  tr.total-row td{background:#fcfcfd;font-weight:600;color:var(--text);border-top:1px solid var(--border);}
+  .mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12.5px;color:var(--text);}
+  .neg{color:var(--danger);}
+  .pill{display:inline-flex;align-items:center;height:22px;padding:0 9px;border-radius:11px;font-size:12px;}
+  .pill.ok{background:#e8f7ef;color:var(--success);}
+  .pill.void{background:#f2f3f5;color:#5c6270;}
+
+  .imgs{display:flex;gap:12px;flex-wrap:wrap;}
+  .thumb{
+    width:120px;height:88px;border:1px solid var(--border);border-radius:4px;overflow:hidden;
+    background:linear-gradient(135deg,#eef3fb,#dfe8f6);display:flex;flex-direction:column;
+    align-items:center;justify-content:center;color:var(--text-3);font-size:12px;gap:4px;
+  }
+  .thumb .ic{font-size:20px;}
+  .imgs .hint{font-size:12px;color:var(--text-3);align-self:center;margin-left:4px;}
+
+  .btn{
+    height:30px;padding:0 16px;border-radius:4px;border:1px solid var(--border);
+    background:#fff;color:var(--text-2);cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s;
+  }
+  .btn:hover{border-color:var(--primary);color:var(--primary);}
+  .btn-danger{color:var(--danger);border-color:#f7c2c2;}
+  .btn-danger:hover{background:#fff1f0;border-color:var(--danger);color:var(--danger);}
+  .btn-primary{background:var(--primary);border-color:var(--primary);color:#fff;}
+  .btn-primary:hover{background:var(--primary-hover);color:#fff;}
+  .btn:disabled{background:#f7f8fa;color:#c9cdd4;border-color:var(--border);cursor:not-allowed;}
+
+  .page-actions{display:flex;justify-content:flex-end;gap:12px;margin-top:20px;}
+  .page-actions .btn{height:34px;padding:0 26px;font-size:14px;}
+
+  .void-note{
+    display:none;align-items:center;gap:8px;margin-top:12px;padding:9px 14px;border-radius:4px;
+    background:#fdecec;border:1px solid #fbd4d4;color:#c0392b;font-size:12.5px;line-height:1.7;
+  }
+  .void-note.show{display:flex;}
+
+  .mask{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;z-index:100;}
+  .mask.show{display:flex;}
+  .modal{background:#fff;border-radius:8px;width:440px;padding:24px 28px;}
+  .modal h3{font-size:16px;margin-bottom:8px;display:flex;align-items:center;gap:8px;}
+  .modal h3 .warn-ic{width:22px;height:22px;border-radius:50%;background:#fff1f0;color:var(--danger);font-size:13px;display:flex;align-items:center;justify-content:center;}
+  .modal p{font-size:13px;color:var(--text-3);line-height:1.9;}
+  .modal-foot{display:flex;justify-content:flex-end;gap:12px;margin-top:18px;}
+
+  .toast{
+    position:fixed;left:50%;top:24px;transform:translateX(-50%) translateY(-8px);
+    background:rgba(31,35,41,.92);color:#fff;font-size:13px;padding:9px 18px;border-radius:4px;
+    opacity:0;pointer-events:none;transition:all .2s;z-index:200;
+  }
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+</style>
+</head>
+<body>
+
+<div class="topnav">
+  <div class="logo"><span class="mark">鹅</span>大黄鹅</div>
+  <div class="nav-item active">售货机运营</div>
+  <div class="nav-item">供应商中心</div>
+  <div class="nav-item">营销中心</div>
+  <div class="nav-item">服务商管理</div>
+  <div class="nav-item">AI管理系统</div>
+  <div class="nav-item">生产管理</div>
+  <div class="nav-item">云值守</div>
+  <div class="nav-item">更多 ▾</div>
+  <div class="nav-right">
+    <span>🌐 中文 ▾</span>
+    <span class="avatar">王</span><span>王泳瑜 ▾</span>
+  </div>
+</div>
+
+<div class="layout">
+  <aside class="sidebar">
+    <div class="side-item">财务审核</div>
+    <div class="side-item">退款支付</div>
+    <div class="side-item">客服工单</div>
+    <div class="side-item">统计分析</div>
+    <div class="side-item main"><span class="ic">Ⓢ</span>结算中心</div>
+    <div class="side-item sub">账户管理</div>
+    <div class="side-item sub">充值管理</div>
+    <div class="side-item sub">退货记录</div>
+    <div class="side-item sub">收益结算</div>
+    <div class="side-item sub active">开票管理</div>
+  </aside>
+
+  <main class="content">
+    <div class="breadcrumb"><a href="javascript:toast('返回开票管理列表')">结算中心</a> / <a href="javascript:toast('返回开票管理列表')">开票管理</a> / <b>开票详情</b></div>
+
+    <!-- 状态横幅 -->
+    <div class="status-bar" id="statusBar">
+      <span class="dot"></span>
+      <div>
+        <div class="st-main">
+          <span id="stText">已开票</span>
+          <span class="src-tag" id="srcTag">线下补录</span>
+        </div>
+        <div class="st-sub" id="stSub">本单由财务线下补录生成，已计入有效开票；关联订单开票状态为「已开票」，不再出现在「新增开票」可选订单中。</div>
+      </div>
+      <div class="st-right">
+        <b id="noText">KP202611020001</b>
+        <span id="timeText">提交于 2026-10-28 16:20:33</span>
+      </div>
+    </div>
+
+    <div class="void-note" id="voidNote">
+      <span>⚠</span>
+      <span>本单已作废，关联订单开票状态已回写为「已作废」，这些订单会重新出现在「新增开票」的可选订单列表中。</span>
+    </div>
+
+    <!-- ① 开票信息 -->
+    <div class="card" style="margin-top:16px;">
+      <div class="card-pad">
+        <div class="sec-title">开票信息<span class="extra">线下补录单 · 仅展示补录录入的信息</span></div>
+
+        <div class="dgrid">
+          <div class="it full"><div class="dk">商户</div><div class="dv">深圳市乐科智控科技有限公司</div></div>
+          <div class="it"><div class="dk">开票来源</div><div class="dv"><span class="src-tag">线下补录</span></div></div>
+          <div class="it"><div class="dk">开票类型</div><div class="dv">快销品采购</div></div>
+          <div class="it"><div class="dk">开票日期</div><div class="dv">2026-10-28</div></div>
+          <div class="it"><div class="dk">开票金额</div><div class="dv"><span class="money" id="amtText">¥748.96</span></div></div>
+          <div class="it"><div class="dk">导入文件名</div><div class="dv">线下开票台账_20261028.xlsx</div></div>
+          <div class="it"><div class="dk">导入人</div><div class="dv">王泳瑜</div></div>
+          <div class="it"><div class="dk">导入时间</div><div class="dv">2026-10-28 16:20:33</div></div>
+          <div class="it"><div class="dk">订单笔数</div><div class="dv">6 个订单（含 1 组对冲单）</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ② 关联订单 -->
+    <div class="card">
+      <div class="card-pad">
+        <div class="sec-title">关联订单<span class="extra">开票状态随本单联动：本单有效 → 已开票；本单作废 → 已作废</span></div>
+
+        <div class="table-wrap">
+          <table class="gt">
+            <thead>
+              <tr>
+                <th style="width:380px;">订单流水号</th>
+                <th class="num">订单金额</th>
+                <th style="width:140px;">开票状态</th>
+                <th style="width:200px;">备注</th>
+              </tr>
+            </thead>
+            <tbody id="tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ③ 开票图片 -->
+    <div class="card">
+      <div class="card-pad">
+        <div class="sec-title">开票图片<span class="extra">补录时上传，共 2 张</span></div>
+        <div class="imgs">
+          <div class="thumb"><span class="ic">🧾</span><span>发票影像 1</span></div>
+          <div class="thumb"><span class="ic">🧾</span><span>发票影像 2</span></div>
+          <span class="hint">点击可查看原图（原型不展开）</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="page-actions">
+      <button class="btn" onclick="toast('返回开票管理列表')">返回</button>
+      <button class="btn btn-danger" id="voidBtn" onclick="openVoid()">作废</button>
+    </div>
+  </main>
+</div>
+
+<!-- 作废确认 -->
+<div class="mask" id="voidMask">
+  <div class="modal">
+    <h3><span class="warn-ic">!</span>作废该补录单？</h3>
+    <p>
+      作废后本单不再计为有效开票，本单关联的 <b>6 个订单</b>开票状态将回写为「已作废」，
+      并可重新在「新增开票」中被选择开票。
+    </p>
+    <div class="modal-foot">
+      <button class="btn" onclick="closeVoid()">取消</button>
+      <button class="btn btn-danger" onclick="doVoid()">确认作废</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  var ORDERS = [
+    {no:'2026101610010000000000000001', amt:26218, note:'—'},
+    {no:'2026101610010000000000000002', amt:12840, note:'开票前状态：已关闭'},
+    {no:'2026101610010000000000000003', amt:50000, note:'主单，含 -D1 对冲单'},
+    {no:'2026101610010000000000000003-D1', amt:-50000, note:'对冲单'},
+    {no:'2026101610010000000000000004', amt:9620, note:'开票前状态：已作废'},
+    {no:'2026101610010000000000000006', amt:26218, note:'台账 4 行合并计 1 单'}
+  ];
+  var VOIDED = false;
+
+  function fmt(f){ return (f<0?'-':'') + '¥' + Math.abs(f/100).toFixed(2); }
+
+  function render(){
+    var tb = document.getElementById('tbody');
+    var total = ORDERS.reduce(function(a,o){ return a + o.amt; }, 0);
+    tb.innerHTML = ORDERS.map(function(o){
+      return '<tr>'+
+        '<td><span class="mono">'+o.no+'</span></td>'+
+        '<td class="num '+(o.amt<0?'neg':'')+'">'+fmt(o.amt)+'</td>'+
+        '<td>'+(VOIDED ? '<span class="pill void">已作废</span>' : '<span class="pill ok">已开票</span>')+'</td>'+
+        '<td style="color:var(--text-3);">'+o.note+'</td>'+
+      '</tr>';
+    }).join('') +
+      '<tr class="total-row"><td>合计（'+ORDERS.length+' 个订单）</td>'+
+      '<td class="num">'+fmt(total)+'</td><td colspan="2"></td></tr>';
+  }
+
+  function openVoid(){ document.getElementById('voidMask').classList.add('show'); }
+  function closeVoid(){ document.getElementById('voidMask').classList.remove('show'); }
+
+  function doVoid(){
+    VOIDED = true;
+    closeVoid();
+    document.getElementById('statusBar').classList.add('void');
+    document.getElementById('stText').textContent = '已作废';
+    document.getElementById('stSub').textContent = '本单已作废，不再计为有效开票；关联订单已回写为「已作废」。';
+    document.getElementById('voidNote').classList.add('show');
+    var btn = document.getElementById('voidBtn');
+    btn.disabled = true;
+    btn.textContent = '已作废';
+    render();
+    toast('已作废，关联订单开票状态已回写为「已作废」');
+  }
+
+  var t = null;
+  function toast(msg){
+    var el = document.getElementById('toast');
+    el.textContent = msg;
+    el.classList.add('show');
+    clearTimeout(t);
+    t = setTimeout(function(){ el.classList.remove('show'); }, 2600);
+  }
+
+  render();
+</script>
+</body>
+</html>
