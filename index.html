@@ -104,6 +104,8 @@
   .pill.ok{background:#e8f7ef;color:var(--success);}
   .pill.void{background:#f2f3f5;color:#8a919f;}
   .pill.part{background:#fff3e0;color:#c46200;}
+  .inved-tag{display:inline-flex;align-items:center;height:20px;padding:0 8px;border-radius:10px;background:#eef1f5;color:var(--text-3);font-size:12px;}
+  .inved-tag.off{background:#fdecec;color:var(--danger);}
 
   .imgs{display:flex;gap:12px;flex-wrap:wrap;align-items:center;}
   .thumb{
@@ -201,7 +203,7 @@
           <span id="stText">部分开票 · 本单由财务线下补录生成</span>
           <span class="src-tag">线下补录</span>
         </div>
-        <div class="st-sub" id="stSub">本单只开订单中的 2 个商品：订单已开票金额 ¥25,020.00，剩余可开 ¥9,446.00，仍可在「新增开票」中被选中。</div>
+        <div class="st-sub" id="stSub">本单只开订单中的 2 个商品：本次开票 ¥25,020.00（2 个商品），提交后剩余 ¥9,446.00，仍可在「新增开票」中被选中。</div>
       </div>
       <span class="x" onclick="this.parentElement.style.display='none'">✕</span>
     </div>
@@ -253,10 +255,11 @@
         <table class="gt">
           <thead>
             <tr>
-              <th style="min-width:260px;">商品名称</th>
-              <th style="width:220px;">规格</th>
-              <th class="num" style="width:110px;">数量</th>
-              <th class="num" style="width:150px;">金额</th>
+              <th style="min-width:240px;">商品名称</th>
+              <th style="width:200px;">商品规格</th>
+              <th class="num" style="width:100px;">商品数量</th>
+              <th class="num" style="width:150px;">折后商品销售金额</th>
+              <th style="width:110px;">开票标记</th>
             </tr>
           </thead>
           <tbody id="itemBody"></tbody>
@@ -273,7 +276,7 @@
           <thead>
             <tr>
               <th style="width:320px;">订单号</th>
-              <th class="num">订单金额</th>
+              <th class="num">系统订单金额</th>
               <th class="num">已开票金额</th>
               <th class="num">剩余可开金额</th>
               <th style="width:120px;">开票状态</th>
@@ -311,7 +314,7 @@
 
 <script>
   /* 本单 = 订单 0001 的部分开票（2 个商品 / 25,020.00），订单金额 34,466.00 */
-  var ORDER = {no:'2026101610010000000000000001', amt:3446600, invAmt:2502000, note:'本单开 2 个商品，剩余可开 ¥9,446.00'};
+  var ORDER = {no:'2026101610010000000000000001', amt:3446600, invAmt:2502000};
   var ITEMS = [
     {name:'康师傅冰红茶', spec:'500ml×15瓶/箱', qty:500, amt:1390000},
     {name:'美汁源果汁',   spec:'1L×12瓶/箱',    qty:200, amt:1112000}
@@ -324,29 +327,35 @@
     var tb = document.getElementById('itemBody');
     if(!tb) return;
     if(VOIDED){
-      tb.innerHTML = '<tr><td colspan="4" style="color:var(--text-3);">本单已作废，商品已开票标记已撤销</td></tr>';
+      tb.innerHTML = '<tr><td colspan="5" style="color:var(--text-3);">本单已作废，商品已开票标记已撤销</td></tr>';
       return;
     }
     var total = ITEMS.reduce(function(a,i){ return a + i.amt; }, 0);
     tb.innerHTML = ITEMS.map(function(i){
       return '<tr>'+
-        '<td class="strong">'+i.name+'</td>'+
+        '<td>'+i.name+'</td>'+
         '<td style="color:var(--text-3);">'+i.spec+'</td>'+
         '<td class="num">'+i.qty+'</td>'+
         '<td class="num">'+fmt(i.amt)+'</td>'+
+        '<td><span class="inved-tag">已开票</span></td>'+
       '</tr>';
     }).join('') +
       '<tr class="total-row"><td>总计（'+ITEMS.length+' 个商品）</td><td></td><td></td>'+
-      '<td class="num">'+fmt(total)+'</td></tr>';
+      '<td class="num">'+fmt(total)+'</td><td></td></tr>';
   }
 
   function render(){
     renderItems();
     var tb = document.getElementById('tbody');
+    var total = ITEMS.reduce(function(a,i){ return a + i.amt; }, 0);
     var invAmt = VOIDED ? 0 : ORDER.invAmt;
     var remain = ORDER.amt - invAmt;
     var st = VOIDED ? '<span class="pill void">未开票</span>'
                     : '<span class="pill part">部分开票</span>';
+    /* 口径写死：本次开票 X（N 个商品）· 提交后剩余 Y */
+    var note = VOIDED
+      ? '本单作废，金额已冲回'
+      : '本次开票 '+fmt(total)+'（'+ITEMS.length+' 个商品）· 提交后剩余 '+fmt(remain);
     tb.innerHTML =
       '<tr>'+
         '<td><span class="mono">'+ORDER.no+'</span></td>'+
@@ -354,7 +363,7 @@
         '<td class="num">'+fmt(invAmt)+'</td>'+
         '<td class="num">'+fmt(remain)+'</td>'+
         '<td>'+st+'</td>'+
-        '<td style="color:var(--text-3);">'+(VOIDED ? '本单作废，金额已冲回' : ORDER.note)+'</td>'+
+        '<td style="color:var(--text-3);">'+note+'</td>'+
       '</tr>'+
       '<tr class="total-row"><td>总计（1 个订单）</td>'+
       '<td class="num">'+fmt(ORDER.amt)+'</td><td class="num">'+fmt(invAmt)+'</td>'+
