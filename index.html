@@ -72,6 +72,9 @@
   .status-bar.void{background:#fdecec;border-color:#f7c9c9;}
   .status-bar.void .dot{background:var(--danger);}
   .status-bar.void .st-main{color:#c0392b;}
+  .status-bar.done{background:#e8f7ef;border-color:#cdebd9;}
+  .status-bar.done .dot{background:var(--success);}
+  .status-bar.done .st-main{color:#00875a;}
   .src-tag{
     display:inline-flex;align-items:center;height:20px;padding:0 8px;border-radius:10px;
     font-size:12px;background:#fff3e0;color:#c46200;font-weight:500;
@@ -196,15 +199,15 @@
   <main class="content">
     <div class="breadcrumb">当前位置：结算中心 / 开票管理 / <b>开票详情</b></div>
 
-    <!-- 状态横幅 -->
-    <div class="status-bar" id="statusBar">
+    <!-- 状态横幅：开票单自身状态（单据维度），订单的「部分开票」是另一个维度、见开票明细表 -->
+    <div class="status-bar done" id="statusBar">
       <span class="dot"></span>
       <div>
         <div class="st-main">
-          <span id="stText">部分开票 · 本单由财务线下补录生成</span>
+          <span id="stText">已开票 · 本单由财务线下补录生成</span>
           <span class="src-tag">线下补录</span>
         </div>
-        <div class="st-sub" id="stSub">本单只开订单中的 2 个商品：本次开票 ¥25,020.00（2 个商品），提交后剩余 ¥9,446.00，仍可在「新增开票」中被选中。</div>
+        <div class="st-sub" id="stSub">本单只开订单中的 2 个商品：本次开票 ¥25,020.00，提交后剩余 ¥9,446.00，该订单仍为「部分开票」，仍在「新增开票」中可被选中。</div>
       </div>
       <span class="x" onclick="this.parentElement.style.display='none'">✕</span>
     </div>
@@ -353,6 +356,7 @@
     VOIDED = true;
     closeVoid();
     var bar = document.getElementById('statusBar');
+    bar.classList.remove('done');
     bar.classList.add('void');
     document.getElementById('stText').textContent = '已作废 · 本单不再计为有效开票';
     document.getElementById('stSub').textContent = '已按本单商品清单撤销已开票标记，订单已开票金额冲回 ¥0.00，开票状态回到「未开票」。';
