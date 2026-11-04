@@ -207,7 +207,7 @@
           <span id="stText">已开票 · 本单由财务线下补录生成</span>
           <span class="src-tag">线下补录</span>
         </div>
-        <div class="st-sub" id="stSub">本单只开订单中的 2 个商品：本次开票 ¥25,020.00，提交后剩余 ¥9,446.00，该订单仍为「部分开票」，仍在「新增开票」中可被选中。</div>
+        <div class="st-sub" id="stSub">本单只开该订单中的 2 个商品，本次开票 ¥25,020.00，开票后该订单剩余可开 ¥9,446.00。<span id="dynState">该订单仍为「部分开票」，可在「新增开票」中继续开票。</span><span style="color:var(--text-3);">（此句按订单当前开票状态实时展示，非本单固定文案）</span></div>
       </div>
       <span class="x" onclick="this.parentElement.style.display='none'">✕</span>
     </div>
@@ -251,9 +251,9 @@
       </div>
     </div>
 
-    <!-- 开票明细：订单级列 + 本次开票商品行（单表合并） -->
+    <!-- 开票明细：订单级列 + 商品行（单表合并）；开票汇总在标题右侧，不占「备注」列 -->
     <div class="panel" style="padding-bottom:16px;">
-      <div class="sec-title">开票明细<span style="margin-left:auto;font-size:12px;font-weight:400;color:var(--text-3);">订单级列纵向合并跨全部商品行，与线下补录页校验表同构</span></div>
+      <div class="sec-title">开票明细<span id="sumLine" style="margin-left:auto;font-size:12px;font-weight:400;color:var(--text-3);"></span></div>
 
       <div class="table-wrap">
         <table class="gt">
@@ -263,13 +263,12 @@
               <th class="num">系统订单金额</th>
               <th class="num">已开票金额</th>
               <th class="num">剩余可开金额</th>
+              <th style="width:110px;">订单开票状态</th>
               <th style="min-width:200px;">商品名称</th>
               <th style="width:180px;">商品规格</th>
               <th class="num" style="width:90px;">商品数量</th>
               <th class="num" style="width:140px;">折后商品销售金额</th>
-              <th style="width:100px;">开票标记</th>
-              <th style="width:110px;">开票状态</th>
-              <th style="width:240px;">备注</th>
+              <th style="width:120px;">商品开票标记</th>
             </tr>
           </thead>
           <tbody id="tbody"></tbody>
@@ -312,7 +311,7 @@
 
   function fmt(f){ return (f<0?'-':'') + '¥' + Math.abs(f/100).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ','); }
 
-  /* 单表渲染：订单级列（订单号/3 个金额/状态/备注）在首商品行 rowspan 合并，商品行跟在后面 */
+  /* 单表渲染：订单级列（订单号/3 个金额/订单开票状态）在首商品行 rowspan 合并；开票汇总放标题右侧 */
   function render(){
     var tb = document.getElementById('tbody');
     var total = ITEMS.reduce(function(a,i){ return a + i.amt; }, 0);
@@ -320,10 +319,16 @@
     var remain = ORDER.amt - invAmt;
     var st = VOIDED ? '<span class="pill void">未开票</span>'
                     : '<span class="pill part">部分开票</span>';
-    /* 口径写死：本次开票 X（N 个商品）· 提交后剩余 Y */
-    var note = VOIDED
+
+    /* 开票汇总（订单级）：放「开票明细」标题右侧，不占商品行 */
+    document.getElementById('sumLine').textContent = VOIDED
       ? '本单作废，金额已冲回'
-      : '本次开票 '+fmt(total)+'（'+ITEMS.length+' 个商品）· 提交后剩余 '+fmt(remain);
+      : '本次开票 ' + fmt(total) + '（' + ITEMS.length + ' 个商品）· 提交后剩余 ' + fmt(remain);
+
+    /* 顶部动态状态段：按订单当前开票状态实时取，不写死（R3） */
+    document.getElementById('dynState').textContent = VOIDED
+      ? '作废后订单开票状态按冲回后金额重算。'
+      : '该订单仍为「部分开票」，可在「新增开票」中继续开票。';
 
     var itemRows = ITEMS.map(function(i, ri){
       var tag = VOIDED ? '<span class="inved-tag off">已撤销</span>' : '<span class="inved-tag">已开票</span>';
@@ -339,9 +344,8 @@
           '<td class="num" rowspan="'+ITEMS.length+'">'+fmt(ORDER.amt)+'</td>'+
           '<td class="num" rowspan="'+ITEMS.length+'">'+fmt(invAmt)+'</td>'+
           '<td class="num" rowspan="'+ITEMS.length+'">'+fmt(remain)+'</td>'+
-          cells+
           '<td rowspan="'+ITEMS.length+'">'+st+'</td>'+
-          '<td style="color:var(--text-3);" rowspan="'+ITEMS.length+'">'+note+'</td>'+
+          cells+
         '</tr>';
       }
       return '<tr>'+cells+'</tr>';
