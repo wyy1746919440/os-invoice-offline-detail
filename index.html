@@ -103,6 +103,7 @@
   .pill{display:inline-flex;align-items:center;height:22px;padding:0 9px;border-radius:11px;font-size:12px;}
   .pill.ok{background:#e8f7ef;color:var(--success);}
   .pill.void{background:#f2f3f5;color:#8a919f;}
+  .pill.part{background:#fff3e0;color:#c46200;}
 
   .imgs{display:flex;gap:12px;flex-wrap:wrap;align-items:center;}
   .thumb{
@@ -197,17 +198,17 @@
       <span class="dot"></span>
       <div>
         <div class="st-main">
-          <span id="stText">已开票 · 本单由财务线下补录生成</span>
+          <span id="stText">部分开票 · 本单由财务线下补录生成</span>
           <span class="src-tag">线下补录</span>
         </div>
-        <div class="st-sub" id="stSub">关联订单开票状态为「已开票」，不再出现在「新增开票」的可选订单列表中。</div>
+        <div class="st-sub" id="stSub">本单只开订单中的 2 个商品：订单已开票金额 ¥25,020.00，剩余可开 ¥9,446.00，仍可在「新增开票」中被选中。</div>
       </div>
       <span class="x" onclick="this.parentElement.style.display='none'">✕</span>
     </div>
 
     <div class="void-note" id="voidNote">
       <span>⚠</span>
-      <span>本单已作废，关联订单开票状态已回写为「已作废」，这些订单会重新出现在「新增开票」的可选订单列表中。</span>
+      <span>本单已作废：本单商品清单的已开票标记已撤销，订单已开票金额已冲回 ¥0.00，开票状态回到「未开票」，这些商品可再次被补录或线上开票。</span>
     </div>
 
     <!-- 申请信息 -->
@@ -230,7 +231,7 @@
         <div class="it"><span class="k">开票类型</span><span class="v">快销品采购</span></div>
         <div class="it"><span class="k">开票主体</span><span class="v">深圳市大黄鹅商务服务有限公司</span></div>
         <div class="it"><span class="k">开票日期</span><span class="v">2026-10-28</span></div>
-        <div class="it"><span class="k">发票金额</span><span class="v"><span class="money">¥748.96</span></span></div>
+        <div class="it"><span class="k">发票金额</span><span class="v"><span class="money">¥25,020.00</span></span></div>
         <div class="it" style="grid-column:1 / -1;">
           <span class="k">上传发票</span>
           <span class="v">
@@ -244,6 +245,25 @@
       </div>
     </div>
 
+    <!-- 本次开票商品（R3） -->
+    <div class="panel" style="padding-bottom:16px;">
+      <div class="sec-title">本次开票商品<span style="margin-left:auto;font-size:12px;font-weight:400;color:var(--text-3);">按商品品项开票，本单只包含以下商品</span></div>
+
+      <div class="table-wrap">
+        <table class="gt">
+          <thead>
+            <tr>
+              <th style="min-width:260px;">商品名称</th>
+              <th style="width:220px;">规格</th>
+              <th class="num" style="width:110px;">数量</th>
+              <th class="num" style="width:150px;">金额</th>
+            </tr>
+          </thead>
+          <tbody id="itemBody"></tbody>
+        </table>
+      </div>
+    </div>
+
     <!-- 订单信息 -->
     <div class="panel" style="padding-bottom:16px;">
       <div class="sec-title">订单信息<span style="margin-left:auto;font-size:12px;font-weight:400;color:var(--text-3);">开票状态随本单联动：本单有效 → 已开票；本单作废 → 已作废</span></div>
@@ -252,10 +272,12 @@
         <table class="gt">
           <thead>
             <tr>
-              <th style="width:360px;">订单号</th>
+              <th style="width:320px;">订单号</th>
               <th class="num">订单金额</th>
+              <th class="num">已开票金额</th>
+              <th class="num">剩余可开金额</th>
               <th style="width:120px;">开票状态</th>
-              <th style="width:240px;">备注</th>
+              <th style="width:220px;">备注</th>
             </tr>
           </thead>
           <tbody id="tbody"></tbody>
@@ -275,8 +297,8 @@
   <div class="modal">
     <h3><span class="warn-ic">!</span>作废该开票单？</h3>
     <p>
-      作废后本单不再计为有效开票，本单关联的 <b>6 个订单</b>开票状态将回写为「已作废」，
-      并可重新在「新增开票」中被选择开票。
+      作废后本单不再计为有效开票：本单 <b>2 个商品</b>的已开票标记将被撤销，
+      订单已开票金额冲回 <b>¥25,020.00</b>，开票状态按冲回后的已开票金额重算（归零回到「未开票」）。
     </p>
     <div class="modal-foot">
       <button class="btn" onclick="closeVoid()">取消</button>
@@ -288,31 +310,55 @@
 <div class="toast" id="toast"></div>
 
 <script>
-  var ORDERS = [
-    {no:'2026101610010000000000000001', amt:26218, note:'—'},
-    {no:'2026101610010000000000000002', amt:12840, note:'开票前状态：已关闭'},
-    {no:'2026101610010000000000000003', amt:50000, note:'主单，含 -D1 对冲单'},
-    {no:'2026101610010000000000000003-D1', amt:-50000, note:'对冲单'},
-    {no:'2026101610010000000000000004', amt:9620, note:'开票前状态：已作废'},
-    {no:'2026101610010000000000000006', amt:26218, note:'台账 4 行合并计 1 单'}
+  /* 本单 = 订单 0001 的部分开票（2 个商品 / 25,020.00），订单金额 34,466.00 */
+  var ORDER = {no:'2026101610010000000000000001', amt:3446600, invAmt:2502000, note:'本单开 2 个商品，剩余可开 ¥9,446.00'};
+  var ITEMS = [
+    {name:'康师傅冰红茶', spec:'500ml×15瓶/箱', qty:500, amt:1390000},
+    {name:'美汁源果汁',   spec:'1L×12瓶/箱',    qty:200, amt:1112000}
   ];
   var VOIDED = false;
 
-  function fmt(f){ return (f<0?'-':'') + '¥' + Math.abs(f/100).toFixed(2); }
+  function fmt(f){ return (f<0?'-':'') + '¥' + Math.abs(f/100).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ','); }
 
-  function render(){
-    var tb = document.getElementById('tbody');
-    var total = ORDERS.reduce(function(a,o){ return a + o.amt; }, 0);
-    tb.innerHTML = ORDERS.map(function(o){
+  function renderItems(){
+    var tb = document.getElementById('itemBody');
+    if(!tb) return;
+    if(VOIDED){
+      tb.innerHTML = '<tr><td colspan="4" style="color:var(--text-3);">本单已作废，商品已开票标记已撤销</td></tr>';
+      return;
+    }
+    var total = ITEMS.reduce(function(a,i){ return a + i.amt; }, 0);
+    tb.innerHTML = ITEMS.map(function(i){
       return '<tr>'+
-        '<td><span class="mono">'+o.no+'</span></td>'+
-        '<td class="num '+(o.amt<0?'neg':'')+'">'+fmt(o.amt)+'</td>'+
-        '<td>'+(VOIDED ? '<span class="pill void">已作废</span>' : '<span class="pill ok">已开票</span>')+'</td>'+
-        '<td style="color:var(--text-3);">'+o.note+'</td>'+
+        '<td class="strong">'+i.name+'</td>'+
+        '<td style="color:var(--text-3);">'+i.spec+'</td>'+
+        '<td class="num">'+i.qty+'</td>'+
+        '<td class="num">'+fmt(i.amt)+'</td>'+
       '</tr>';
     }).join('') +
-      '<tr class="total-row"><td>总计（'+ORDERS.length+' 个订单）</td>'+
-      '<td class="num">'+fmt(total)+'</td><td colspan="2"></td></tr>';
+      '<tr class="total-row"><td>总计（'+ITEMS.length+' 个商品）</td><td></td><td></td>'+
+      '<td class="num">'+fmt(total)+'</td></tr>';
+  }
+
+  function render(){
+    renderItems();
+    var tb = document.getElementById('tbody');
+    var invAmt = VOIDED ? 0 : ORDER.invAmt;
+    var remain = ORDER.amt - invAmt;
+    var st = VOIDED ? '<span class="pill void">未开票</span>'
+                    : '<span class="pill part">部分开票</span>';
+    tb.innerHTML =
+      '<tr>'+
+        '<td><span class="mono">'+ORDER.no+'</span></td>'+
+        '<td class="num">'+fmt(ORDER.amt)+'</td>'+
+        '<td class="num">'+fmt(invAmt)+'</td>'+
+        '<td class="num">'+fmt(remain)+'</td>'+
+        '<td>'+st+'</td>'+
+        '<td style="color:var(--text-3);">'+(VOIDED ? '本单作废，金额已冲回' : ORDER.note)+'</td>'+
+      '</tr>'+
+      '<tr class="total-row"><td>总计（1 个订单）</td>'+
+      '<td class="num">'+fmt(ORDER.amt)+'</td><td class="num">'+fmt(invAmt)+'</td>'+
+      '<td class="num">'+fmt(remain)+'</td><td colspan="2"></td></tr>';
   }
 
   function openVoid(){ document.getElementById('voidMask').classList.add('show'); }
@@ -324,13 +370,13 @@
     var bar = document.getElementById('statusBar');
     bar.classList.add('void');
     document.getElementById('stText').textContent = '已作废 · 本单不再计为有效开票';
-    document.getElementById('stSub').textContent = '关联订单开票状态已回写为「已作废」。';
+    document.getElementById('stSub').textContent = '已按本单商品清单撤销已开票标记，订单已开票金额冲回 ¥0.00，开票状态回到「未开票」。';
     document.getElementById('voidNote').classList.add('show');
     var btn = document.getElementById('voidBtn');
     btn.disabled = true;
     btn.textContent = '已作废';
     render();
-    toast('已作废，关联订单开票状态已回写为「已作废」');
+    toast('已作废：本单商品标记已撤销，订单金额已冲回');
   }
 
   var t = null;
