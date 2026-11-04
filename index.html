@@ -106,6 +106,7 @@
   .pill.part{background:#fff3e0;color:#c46200;}
   .inved-tag{display:inline-flex;align-items:center;height:20px;padding:0 8px;border-radius:10px;background:#eef1f5;color:var(--text-3);font-size:12px;}
   .inved-tag.off{background:#fdecec;color:var(--danger);}
+  td.ono{background:#fafbfc;vertical-align:top;border-left:3px solid var(--primary);}
 
   .imgs{display:flex;gap:12px;flex-wrap:wrap;align-items:center;}
   .thumb{
@@ -247,40 +248,25 @@
       </div>
     </div>
 
-    <!-- 本次开票商品（R3） -->
+    <!-- 开票明细：订单级列 + 本次开票商品行（单表合并） -->
     <div class="panel" style="padding-bottom:16px;">
-      <div class="sec-title">本次开票商品<span style="margin-left:auto;font-size:12px;font-weight:400;color:var(--text-3);">按商品品项开票，本单只包含以下商品</span></div>
+      <div class="sec-title">开票明细<span style="margin-left:auto;font-size:12px;font-weight:400;color:var(--text-3);">订单级列纵向合并跨全部商品行，与线下补录页校验表同构</span></div>
 
       <div class="table-wrap">
         <table class="gt">
           <thead>
             <tr>
-              <th style="min-width:240px;">商品名称</th>
-              <th style="width:200px;">商品规格</th>
-              <th class="num" style="width:100px;">商品数量</th>
-              <th class="num" style="width:150px;">折后商品销售金额</th>
-              <th style="width:110px;">开票标记</th>
-            </tr>
-          </thead>
-          <tbody id="itemBody"></tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- 订单信息 -->
-    <div class="panel" style="padding-bottom:16px;">
-      <div class="sec-title">订单信息<span style="margin-left:auto;font-size:12px;font-weight:400;color:var(--text-3);">开票状态随本单联动：本单有效 → 已开票；本单作废 → 已作废</span></div>
-
-      <div class="table-wrap">
-        <table class="gt">
-          <thead>
-            <tr>
-              <th style="width:320px;">订单号</th>
+              <th style="width:300px;">订单号</th>
               <th class="num">系统订单金额</th>
               <th class="num">已开票金额</th>
               <th class="num">剩余可开金额</th>
-              <th style="width:120px;">开票状态</th>
-              <th style="width:220px;">备注</th>
+              <th style="min-width:200px;">商品名称</th>
+              <th style="width:180px;">商品规格</th>
+              <th class="num" style="width:90px;">商品数量</th>
+              <th class="num" style="width:140px;">折后商品销售金额</th>
+              <th style="width:100px;">开票标记</th>
+              <th style="width:110px;">开票状态</th>
+              <th style="width:240px;">备注</th>
             </tr>
           </thead>
           <tbody id="tbody"></tbody>
@@ -323,29 +309,8 @@
 
   function fmt(f){ return (f<0?'-':'') + '¥' + Math.abs(f/100).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ','); }
 
-  function renderItems(){
-    var tb = document.getElementById('itemBody');
-    if(!tb) return;
-    if(VOIDED){
-      tb.innerHTML = '<tr><td colspan="5" style="color:var(--text-3);">本单已作废，商品已开票标记已撤销</td></tr>';
-      return;
-    }
-    var total = ITEMS.reduce(function(a,i){ return a + i.amt; }, 0);
-    tb.innerHTML = ITEMS.map(function(i){
-      return '<tr>'+
-        '<td>'+i.name+'</td>'+
-        '<td style="color:var(--text-3);">'+i.spec+'</td>'+
-        '<td class="num">'+i.qty+'</td>'+
-        '<td class="num">'+fmt(i.amt)+'</td>'+
-        '<td><span class="inved-tag">已开票</span></td>'+
-      '</tr>';
-    }).join('') +
-      '<tr class="total-row"><td>总计（'+ITEMS.length+' 个商品）</td><td></td><td></td>'+
-      '<td class="num">'+fmt(total)+'</td><td></td></tr>';
-  }
-
+  /* 单表渲染：订单级列（订单号/3 个金额/状态/备注）在首商品行 rowspan 合并，商品行跟在后面 */
   function render(){
-    renderItems();
     var tb = document.getElementById('tbody');
     var total = ITEMS.reduce(function(a,i){ return a + i.amt; }, 0);
     var invAmt = VOIDED ? 0 : ORDER.invAmt;
@@ -356,18 +321,29 @@
     var note = VOIDED
       ? '本单作废，金额已冲回'
       : '本次开票 '+fmt(total)+'（'+ITEMS.length+' 个商品）· 提交后剩余 '+fmt(remain);
-    tb.innerHTML =
-      '<tr>'+
-        '<td><span class="mono">'+ORDER.no+'</span></td>'+
-        '<td class="num">'+fmt(ORDER.amt)+'</td>'+
-        '<td class="num">'+fmt(invAmt)+'</td>'+
-        '<td class="num">'+fmt(remain)+'</td>'+
-        '<td>'+st+'</td>'+
-        '<td style="color:var(--text-3);">'+note+'</td>'+
-      '</tr>'+
-      '<tr class="total-row"><td>总计（1 个订单）</td>'+
-      '<td class="num">'+fmt(ORDER.amt)+'</td><td class="num">'+fmt(invAmt)+'</td>'+
-      '<td class="num">'+fmt(remain)+'</td><td colspan="2"></td></tr>';
+
+    var itemRows = ITEMS.map(function(i, ri){
+      var tag = VOIDED ? '<span class="inved-tag off">已撤销</span>' : '<span class="inved-tag">已开票</span>';
+      var cells =
+        '<td>'+i.name+'</td>'+
+        '<td style="color:var(--text-3);">'+i.spec+'</td>'+
+        '<td class="num">'+i.qty+'</td>'+
+        '<td class="num">'+fmt(i.amt)+'</td>'+
+        '<td>'+tag+'</td>';
+      if(ri === 0){
+        return '<tr>'+
+          '<td class="ono" rowspan="'+ITEMS.length+'"><span class="mono">'+ORDER.no+'</span></td>'+
+          '<td class="num" rowspan="'+ITEMS.length+'">'+fmt(ORDER.amt)+'</td>'+
+          '<td class="num" rowspan="'+ITEMS.length+'">'+fmt(invAmt)+'</td>'+
+          '<td class="num" rowspan="'+ITEMS.length+'">'+fmt(remain)+'</td>'+
+          cells+
+          '<td rowspan="'+ITEMS.length+'">'+st+'</td>'+
+          '<td style="color:var(--text-3);" rowspan="'+ITEMS.length+'">'+note+'</td>'+
+        '</tr>';
+      }
+      return '<tr>'+cells+'</tr>';
+    }).join('');
+    tb.innerHTML = itemRows;
   }
 
   function openVoid(){ document.getElementById('voidMask').classList.add('show'); }
